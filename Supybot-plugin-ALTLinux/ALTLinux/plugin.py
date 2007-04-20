@@ -31,6 +31,7 @@ import time
 import rfc822
 import poplib
 import textwrap
+import re
 from cStringIO import StringIO as sio
 
 import supybot.utils as utils
@@ -109,6 +110,8 @@ class ALTLinux(callbacks.Privmsg):
             message = rfc822.Message(sio(msg))
             subject = message.get('Subject', '').rstrip()
             gitdir = message.get('X-git-dir').rstrip()
+            p = re.compile(r'(/people/.+?/packages/)(.+?.git)')
+            gitdir = p.sub(r'http://git.altlinux.org\1?p=\2', gitdir)
             refname = message.get('X-git-refname').rstrip()
             self.log.info('Received message with subject %q.',
                           subject)
