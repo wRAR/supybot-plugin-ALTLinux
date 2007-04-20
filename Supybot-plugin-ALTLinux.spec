@@ -1,6 +1,6 @@
 Name: Supybot-plugin-ALTLinux
 Version: 0.1
-Release: alt1
+Release: alt2
 
 Summary: IRC bot written in Python - ALTLinux plugin
 License: BSD
@@ -36,6 +36,9 @@ unset RPM_PYTHON
 %files -f INSTALLED_FILES
 
 %changelog
+* Sat Apr 21 2007 Andrey Rahmatullin <wrar@altlinux.ru> 0.1-alt2
+- print repo gitweb URL
+
 * Wed Mar 07 2007 Andrey Rahmatullin <wrar@altlinux.ru> 0.1-alt1
 - initial, based on Mailbox plugin
 
