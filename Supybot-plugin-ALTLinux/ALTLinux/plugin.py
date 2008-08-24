@@ -31,7 +31,6 @@ import time
 import rfc822
 import poplib
 import textwrap
-import re
 from cStringIO import StringIO as sio
 
 import supybot.utils as utils
@@ -108,20 +107,25 @@ class ALTLinux(callbacks.Privmsg):
         i = None
         for (i, msg) in self._getMsgs(pop):
             message = rfc822.Message(sio(msg))
-            subject = message.get('Subject', '').rstrip()
-            gitdir = message.get('X-git-dir').rstrip()
-            p = re.compile(r'(/people/.+?/packages/)(.+?.git)')
-            gitdir = p.sub(r'http://git.altlinux.org\1?p=\2', gitdir)
-            refname = message.get('X-git-refname').rstrip()
+            if not message:
+                continue
+            subject = message.get('Subject', '')
             self.log.info('Received message with subject %q.',
                           subject)
+            descr = message.get('X-git-description')
+            if not descr.startswith('packages'):
+                continue
+            giturl = message.get('X-git-URL')
+            if not giturl:
+                continue
+            gitdir = giturl[:giturl.find(';')]
+            refname = message.get('X-git-refname')
             channels = list(self.registryValue('defaultChannels'))
             self.log.info('Making announcement to %L.', channels)
             for channel in channels:
                 if channel in irc.state.channels:
-                    s = 'Update of %s: %s' % (gitdir, refname)
+                    s = 'Update of %s (%s)' % (gitdir, refname)
                     irc.queueMsg(ircmsgs.privmsg(channel, s))
-                prefix = ''
         self._quit(pop)
         self.log.info('Finished checking mailbox, time elapsed: %s',
                       utils.timeElapsed(time.time() - start))
