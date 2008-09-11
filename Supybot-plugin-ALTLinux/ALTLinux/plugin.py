@@ -28,7 +28,7 @@
 ###
 
 import time
-import rfc822
+import email
 import poplib
 import textwrap
 from cStringIO import StringIO as sio
@@ -106,7 +106,7 @@ class ALTLinux(callbacks.Privmsg):
         pop = self._getPop(irc)
         i = None
         for (i, msg) in self._getMsgs(pop):
-            message = rfc822.Message(sio(msg))
+            message = email.Message(sio(msg))
             if not message:
                 continue
             subject = message.get('Subject', '')
