@@ -1,5 +1,5 @@
 Name: Supybot-plugin-ALTLinux
-Version: 0.1.1
+Version: 0.1.2
 Release: alt1
 
 Summary: IRC bot written in Python - ALTLinux plugin
@@ -36,6 +36,9 @@ unset RPM_PYTHON
 %files -f INSTALLED_FILES
 
 %changelog
+* Thu Sep 11 2008 Andrey Rahmatullin <wrar@altlinux.ru> 0.1.2-alt1
+- use email module instead of obsolete rfc822
+
 * Sun Aug 24 2008 Andrey Rahmatullin <wrar@altlinux.ru> 0.1.1-alt1
 - use X-git-URL instead of X-git-dir, process only packages/ dir (raorn@)
 
