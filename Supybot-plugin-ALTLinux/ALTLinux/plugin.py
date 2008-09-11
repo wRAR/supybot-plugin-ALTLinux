@@ -28,10 +28,8 @@
 ###
 
 import time
-import email
+import email.parser
 import poplib
-import textwrap
-from cStringIO import StringIO as sio
 
 import supybot.utils as utils
 import supybot.world as world
@@ -106,7 +104,7 @@ class ALTLinux(callbacks.Privmsg):
         pop = self._getPop(irc)
         i = None
         for (i, msg) in self._getMsgs(pop):
-            message = email.Message(sio(msg))
+            message = email.parser.HeaderParser().parsestr(msg)
             if not message:
                 continue
             subject = message.get('Subject', '')
