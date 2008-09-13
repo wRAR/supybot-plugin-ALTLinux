@@ -26,7 +26,7 @@ package_dir = { }
 for plugin in plugins:
     package_dir['supybot.plugins.' + plugin] = plugin
 
-version = '0.1.1'
+version = '0.1.3'
 setup(
     name='supybot-plugin-altlinux',
     version=version,
