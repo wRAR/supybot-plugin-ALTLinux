@@ -46,7 +46,7 @@ class ALTLinux(callbacks.Privmsg):
     This should describe *how* to use this plugin."""
     threaded = True
     lastCheck = 0
-    def _checkServer(self, irc):
+    def _checkServer(self):
         user = self.registryValue('user')
         server = self.registryValue('server')
         password = self.registryValue('password')
@@ -64,20 +64,19 @@ class ALTLinux(callbacks.Privmsg):
         pop.pass_(password)
         return pop
 
-    def _getPop(self, irc):
-        return self._connect(*self._checkServer(irc))
+    def _getPop(self):
+        return self._connect(*self._checkServer())
 
     def _getMsgs(self, pop):
         n = len(pop.list()[1])
-        for i in range(1, n+1):
+        for i in range(1, n + 1):
             (_, lines, _) = pop.retr(i)
             yield (i, '\r\n'.join(lines))
         
-    def _quit(self, pop, delete=True):
-        if delete:
-            n = len(pop.list()[1])
-            for i in range(1, n+1):
-                pop.dele(i)
+    def _quit(self, pop):
+        n = len(pop.list()[1])
+        for i in range(1, n + 1):
+            pop.dele(i)
         pop.quit()
 
     def __call__(self, irc, msg):
@@ -101,7 +100,7 @@ class ALTLinux(callbacks.Privmsg):
     def _checkForAnnouncements(self, irc):
         start = time.time()
         self.log.info('Checking mailbox for announcements.')
-        pop = self._getPop(irc)
+        pop = self._getPop()
         i = None
         for (i, msg) in self._getMsgs(pop):
             message = email.parser.HeaderParser().parsestr(msg)
