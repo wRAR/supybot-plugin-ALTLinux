@@ -55,6 +55,9 @@ conf.registerGlobalValue(ALTLinux, 'period',
 conf.registerGlobalValue(ALTLinux, 'defaultChannels',
     conf.SpaceSeparatedSetOfChannels([], """Determines to which channels the
     bot will send messages"""))
+conf.registerChannelValue(ALTLinux, 'channelEncoding',
+    registry.String('koi8-r', """Determines the encoding used to encode and
+    decode channel messages"""))
 
 
 # vim:set shiftwidth=4 tabstop=8 expandtab textwidth=78
