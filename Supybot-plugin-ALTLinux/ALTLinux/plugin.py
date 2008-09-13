@@ -138,7 +138,7 @@ class ALTLinux(callbacks.Privmsg):
 
     def searchbug(self, irc, msg, args, terms):
         bugsCSV = utils.web.getUrlFd(self.bugzillaRoot +
-                'buglist.cgi?query_format=specific&ctype=csv&content=' +
+                'buglist.cgi?query_format=specific&order=relevance+desc&bug_status=__all__&ctype=csv&content=' +
                 urllib.quote_plus(terms.decode(self.registryValue('channelEncoding',
                     msg.args[0])).encode('utf-8')))
         reader = csv.DictReader(bugsCSV)
