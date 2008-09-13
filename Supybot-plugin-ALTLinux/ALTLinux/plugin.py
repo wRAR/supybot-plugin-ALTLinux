@@ -30,6 +30,8 @@
 import time
 import email.parser
 import poplib
+import urllib
+import csv
 
 import supybot.utils as utils
 import supybot.world as world
@@ -127,7 +129,30 @@ class ALTLinux(callbacks.Privmsg):
         self.log.info('Finished checking mailbox, time elapsed: %s',
                       utils.timeElapsed(time.time() - start))
 
-Class = ALTLinux
+# Bugzilla
+    bugzillaRoot = 'https://bugzilla.altlinux.org/'
 
+    def altbug(self, irc, msg, args, bugno):
+        pass
+    altbug = wrap(altbug, [('id', 'bug')])
+
+    def searchbug(self, irc, msg, args, terms):
+        bugsCSV = utils.web.getUrlFd(self.bugzillaRoot +
+                'buglist.cgi?query_format=specific&ctype=csv&content=' +
+                urllib.quote_plus(terms.decode(self.registryValue('channelEncoding',
+                    msg.args[0])).encode('utf-8')))
+        reader = csv.DictReader(bugsCSV)
+        reply = []
+        for record in reader:
+            record = dict([(k, unicode(v, 'utf-8')) for k, v in
+                record.items()])
+            reply.append('%(bug_id)s %(bug_status)s %(resolution)s "%(short_desc)s"' %
+                    record)
+        if reply:
+            irc.reply(';'.join(reply).encode(self.registryValue('channelEncoding',
+                msg.args[0])))
+    searchbug = wrap(searchbug, ['text'])
+
+Class = ALTLinux
 
 # vim:set shiftwidth=4 tabstop=8 expandtab textwidth=78:
