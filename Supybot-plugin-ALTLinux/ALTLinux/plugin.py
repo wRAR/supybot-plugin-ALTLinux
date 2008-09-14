@@ -33,6 +33,7 @@ import poplib
 import urllib
 import csv
 import xmlrpclib
+from xml.etree.cElementTree import ElementTree
 
 import supybot.utils as utils
 import supybot.world as world
@@ -134,6 +135,44 @@ class ALTLinux(callbacks.Privmsg):
     bugzillaRoot = 'https://bugzilla.altlinux.org/'
 
     def altbug(self, irc, msg, args, bugno):
+        def _formatEmail(e):
+            if e.get('name'):
+                return '%s <%s>' % (self._encode(e.get('name')), e.text)
+            return e.text
+
+        try:
+            bugXML = utils.web.getUrlFd(self.bugzillaRoot +
+                    'show_bug.cgi?ctype=xml&excludefield=attachmentdata&'
+                    'excludefield=long_desc&excludefield=attachment&id=' +
+                    str(bugno))
+        except utils.web.Error, err:
+            irc.error(err.message)
+            return
+        etree = ElementTree(file = bugXML)
+        bugRoot = etree.find('bug')
+        buginfo = {
+                'bug_id':               bugRoot.find('bug_id').text,
+                'summary':              self._encode(bugRoot.find('short_desc').text),
+                'creation_time':        bugRoot.find('creation_ts').text,
+                'last_change_time':     bugRoot.find('delta_ts').text,
+                'bug_severity':         bugRoot.find('bug_severity').text,
+                'bug_status':           bugRoot.find('bug_status').text,
+                'resolution':           ' ' + bugRoot.find('resolution').text
+                                            if bugRoot.find('resolution') != None
+                                            else '',
+                'product':              self._encode(bugRoot.find('product').text),
+                'component':            bugRoot.find('component').text,
+                'reporter':             _formatEmail(bugRoot.find('reporter')),
+                'assigned_to':          _formatEmail(bugRoot.find('assigned_to')),
+                }
+        irc.reply('%(bug_id)s: %(bug_severity)s, %(bug_status)s'
+                '%(resolution)s; %(product)s - %(component)s; created on '
+                '%(creation_time)s by %(reporter)s, assigned to '
+                '%(assigned_to)s, last changed on %(last_change_time)s; '
+                'summary: "%(summary)s"' % buginfo)
+    altbug = wrap(altbug, [('id', 'bug')])
+
+    def altbugxmlrpc(self, irc, msg, args, bugno):
         bz = xmlrpclib.ServerProxy(self.bugzillaRoot + 'xmlrpc.cgi',
                 use_datetime = True)
         try:
@@ -155,9 +194,8 @@ class ALTLinux(callbacks.Privmsg):
 
         irc.reply('%(bug_id)d: %(bug_severity)s %(bug_status)s %(resolution)s, '
                 '%(product)s, created: %(creation_time)s, last changed: '
-                '%(last_change_time)s; summary: "%(summary)s"'
-                % buginfo)
-    altbug = wrap(altbug, [('id', 'bug')])
+                '%(last_change_time)s; summary: "%(summary)s"' % buginfo)
+    altbugxmlrpc = wrap(altbug, [('id', 'bug')])
 
     def searchbug(self, irc, msg, args, terms):
         bugsCSV = utils.web.getUrlFd(self.bugzillaRoot +
