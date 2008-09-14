@@ -134,25 +134,35 @@ class ALTLinux(callbacks.Privmsg):
     bugzillaRoot = 'https://bugzilla.altlinux.org/'
 
     def altbug(self, irc, msg, args, bugno):
-        bz = xmlrpclib.ServerProxy(self.bugzillaRoot + 'xmlrpc.cgi')
+        bz = xmlrpclib.ServerProxy(self.bugzillaRoot + 'xmlrpc.cgi',
+                use_datetime = True)
         try:
-            bug = bz.Bug.get_bugs({'ids':[bugno]})['bugs'][0]
+            bug = bz.Bug.get_bugs({'ids': [bugno]})['bugs'][0]
         except xmlrpclib.Fault, fault:
             irc.error(fault.faultString)
             return
+        buginfo = {
+                'bug_id':               bug['id'],
+                'summary':              self._encode(bug['summary']),
+                'creation_time':        bug['creation_time'].date(),
+                'last_change_time':     bug['last_change_time'].date(),
+                'bug_severity':         bug['internals']['bug_severity'],
+                'bug_status':           bug['internals']['bug_status'],
+                'resolution':           bug['internals']['resolution'],
+                }
+        products = bz.Product.get_products({'ids': [bug['internals']['product_id']]})['products']
+        buginfo['product'] = products[0]['name'] if len(products) else ''
+
         irc.reply('%(bug_id)d: %(bug_severity)s %(bug_status)s %(resolution)s, '
-                'product: %(product_id)s, component: %(component_id)s, '
-                'created %(creation_ts)s by %(reporter_id)s, assigned to '
-                '%(assigned_to_id)s' % bug['internals'] + ' summary: ' +
-                bug['summary'].encode(self.registryValue('channelEncoding',
-                    msg.args[0])))
+                '%(product)s, created: %(creation_time)s, last changed: '
+                '%(last_change_time)s; summary: "%(summary)s"'
+                % buginfo)
     altbug = wrap(altbug, [('id', 'bug')])
 
     def searchbug(self, irc, msg, args, terms):
         bugsCSV = utils.web.getUrlFd(self.bugzillaRoot +
                 'buglist.cgi?query_format=specific&order=relevance+desc&bug_status=__all__&ctype=csv&content=' +
-                urllib.quote_plus(terms.decode(self.registryValue('channelEncoding',
-                    msg.args[0])).encode('utf-8')))
+                urllib.quote_plus(self._decode(terms).encode('utf-8')))
         reader = csv.DictReader(bugsCSV)
         reply = []
         for record in reader:
@@ -161,9 +171,13 @@ class ALTLinux(callbacks.Privmsg):
             reply.append('%(bug_id)s %(bug_status)s %(resolution)s "%(short_desc)s"' %
                     record)
         if reply:
-            irc.reply(';'.join(reply).encode(self.registryValue('channelEncoding',
-                msg.args[0])))
+            irc.reply(self._encode('; '.join(reply)))
     searchbug = wrap(searchbug, ['text'])
+
+    def _encode(self, s):
+        return s.encode(self.registryValue('channelEncoding'))
+    def _decode(self, s):
+        return s.decode(self.registryValue('channelEncoding'))
 
 Class = ALTLinux
 
