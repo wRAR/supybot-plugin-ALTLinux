@@ -151,7 +151,7 @@ class ALTLinux(callbacks.Privmsg):
                 'resolution':           bug['internals']['resolution'],
                 }
         products = bz.Product.get_products({'ids': [bug['internals']['product_id']]})['products']
-        buginfo['product'] = products[0]['name'] if len(products) else ''
+        buginfo['product'] = self._encode(products[0]['name']) if len(products) else ''
 
         irc.reply('%(bug_id)d: %(bug_severity)s %(bug_status)s %(resolution)s, '
                 '%(product)s, created: %(creation_time)s, last changed: '
