@@ -32,6 +32,7 @@ import email.parser
 import poplib
 import urllib
 import csv
+import xmlrpclib
 
 import supybot.utils as utils
 import supybot.world as world
@@ -133,7 +134,18 @@ class ALTLinux(callbacks.Privmsg):
     bugzillaRoot = 'https://bugzilla.altlinux.org/'
 
     def altbug(self, irc, msg, args, bugno):
-        pass
+        bz = xmlrpclib.ServerProxy(self.bugzillaRoot + 'xmlrpc.cgi')
+        try:
+            bug = bz.Bug.get_bugs({'ids':[bugno]})['bugs'][0]
+        except xmlrpclib.Fault, fault:
+            irc.error(fault.faultString)
+            return
+        irc.reply('%(bug_id)d: %(bug_severity)s %(bug_status)s %(resolution)s, '
+                'product: %(product_id)s, component: %(component_id)s, '
+                'created %(creation_ts)s by %(reporter_id)s, assigned to '
+                '%(assigned_to_id)s' % bug['internals'] + ' summary: ' +
+                bug['summary'].encode(self.registryValue('channelEncoding',
+                    msg.args[0])))
     altbug = wrap(altbug, [('id', 'bug')])
 
     def searchbug(self, irc, msg, args, terms):
