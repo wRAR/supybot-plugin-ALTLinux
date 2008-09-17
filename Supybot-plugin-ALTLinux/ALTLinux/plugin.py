@@ -198,9 +198,13 @@ class ALTLinux(callbacks.Privmsg):
     altbugxmlrpc = wrap(altbug, [('id', 'bug')])
 
     def searchbug(self, irc, msg, args, terms):
-        bugsCSV = utils.web.getUrlFd(self.bugzillaRoot +
-                'buglist.cgi?query_format=specific&order=relevance+desc&bug_status=__all__&ctype=csv&content=' +
-                urllib.quote_plus(self._decode(terms).encode('utf-8')))
+        try:
+            bugsCSV = utils.web.getUrlFd(self.bugzillaRoot +
+                    'buglist.cgi?query_format=specific&order=relevance+desc&bug_status=__all__&ctype=csv&content=' +
+                    urllib.quote_plus(self._decode(terms).encode('utf-8')))
+        except utils.web.Error, err:
+            irc.error(err.message)
+            return
         reader = csv.DictReader(bugsCSV)
         reply = []
         for record in reader:
