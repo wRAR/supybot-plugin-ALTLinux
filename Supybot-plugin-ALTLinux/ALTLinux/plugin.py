@@ -34,6 +34,9 @@ import urllib
 import csv
 import xmlrpclib
 from xml.etree.cElementTree import ElementTree
+import re
+from fnmatch import fnmatch
+from operator import itemgetter
 
 import supybot.utils as utils
 import supybot.world as world
@@ -215,6 +218,39 @@ class ALTLinux(callbacks.Privmsg):
         if reply:
             irc.reply(self._encode('; '.join(reply)))
     searchbug = wrap(searchbug, ['text'])
+
+    def gitalt(self, irc, msg, args, pattern):
+        packages = self.getPkgList()
+        found = []
+        if pattern in packages:
+            found.extend([(pattern, p, t) for p, t in
+                packages[pattern].iteritems()])
+        else:
+            for package, packagers in packages.iteritems():
+                if fnmatch(package, pattern):
+                    found.extend([(package, p, t) for p, t in
+                        packagers.iteritems()])
+        reply = []
+        for package, packager, tm in sorted(found, key=itemgetter(2),
+                reverse=True):
+            reply.append('/people/%s/packages/%s: %s' % (packager, package,
+                    time.strftime('%Y-%m-%d', time.gmtime(tm))))
+        irc.reply('; '.join(reply) if reply else 'Nothing found')
+    gitalt = wrap(gitalt, ['somethingWithoutSpaces'])
+
+    def getPkgList(self):
+        try:
+            pkgList = utils.web.getUrlFd('http://git.altlinux.org/people-packages-list')
+        except utils.web.Error, err:
+            irc.error(err.message)
+            return
+        r = re.compile(r'^/people/(?P<packager>[a-z0-9_]+)/packages/(?P<package>.*?)\.git\t(?P<time>\d+)$')
+        packages = {}
+        for line in pkgList:
+            match = r.match(line)
+            packages.setdefault(match.group('package'), {})[
+                    match.group('packager')] = int(match.group('time'))
+        return packages
 
     def _encode(self, s):
         return s.encode(self.registryValue('channelEncoding'))
