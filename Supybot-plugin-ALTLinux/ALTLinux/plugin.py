@@ -220,7 +220,7 @@ class ALTLinux(callbacks.Privmsg):
     searchbug = wrap(searchbug, ['text'])
 
     def gitalt(self, irc, msg, args, pattern):
-        packages = self.getPkgList()
+        packages = self._getPkgList()
         found = []
         if pattern in packages:
             found.extend([(pattern, p, t) for p, t in
@@ -238,7 +238,10 @@ class ALTLinux(callbacks.Privmsg):
         irc.reply('; '.join(reply) if reply else 'Nothing found')
     gitalt = wrap(gitalt, ['somethingWithoutSpaces'])
 
-    def getPkgList(self):
+    _pkgList = None
+    def _getPkgList(self):
+        if self._pkgList:
+            return self._pkgList
         try:
             pkgList = utils.web.getUrlFd('http://git.altlinux.org/people-packages-list')
         except utils.web.Error, err:
@@ -250,6 +253,7 @@ class ALTLinux(callbacks.Privmsg):
             match = r.match(line)
             packages.setdefault(match.group('package'), {})[
                     match.group('packager')] = int(match.group('time'))
+        self._pkgList = packages
         return packages
 
     def _encode(self, s):
