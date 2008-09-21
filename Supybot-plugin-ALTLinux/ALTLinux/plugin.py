@@ -173,6 +173,7 @@ class ALTLinux(callbacks.Privmsg):
                 '%(creation_time)s by %(reporter)s, assigned to '
                 '%(assigned_to)s, last changed on %(last_change_time)s; '
                 'summary: "%(summary)s"' % buginfo)
+        bugXML.close()
     altbug = wrap(altbug, [('id', 'bug')])
 
     def altbugxmlrpc(self, irc, msg, args, bugno):
@@ -211,10 +212,11 @@ class ALTLinux(callbacks.Privmsg):
         reader = csv.DictReader(bugsCSV)
         reply = []
         for record in reader:
-            record = dict([(k, unicode(v, 'utf-8')) for k, v in
-                record.items()])
+            record = dict([(k, v.encode('utf-8')) for k, v in
+                record.iteritems()])
             reply.append('%(bug_id)s %(bug_status)s %(resolution)s "%(short_desc)s"' %
                     record)
+        bugsCSV.close()
         if reply:
             irc.reply(self._encode('; '.join(reply)))
     searchbug = wrap(searchbug, ['text'])
@@ -253,6 +255,7 @@ class ALTLinux(callbacks.Privmsg):
             match = r.match(line)
             packages.setdefault(match.group('package'), {})[
                     match.group('packager')] = int(match.group('time'))
+        pkgList.close()
         self._pkgList = packages
         return packages
 
