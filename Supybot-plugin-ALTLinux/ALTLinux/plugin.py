@@ -37,7 +37,11 @@ from xml.etree.cElementTree import ElementTree
 import re
 from fnmatch import fnmatch
 from operator import itemgetter
+import cPickle as pickle
+import os
+import stat
 
+import supybot.conf as conf
 import supybot.utils as utils
 import supybot.world as world
 from supybot.commands import *
@@ -48,7 +52,7 @@ import supybot.callbacks as callbacks
 
 from supybot.utils.iter import all
 
-class ALTLinux(callbacks.Privmsg):
+class ALTLinux(callbacks.Plugin):
     """Add the help for "@help ALTLinux" here
     This should describe *how* to use this plugin."""
     threaded = True
@@ -221,8 +225,15 @@ class ALTLinux(callbacks.Privmsg):
             irc.reply(self._encode('; '.join(reply)))
     searchbug = wrap(searchbug, ['text'])
 
+# git.altlinux.org
+    _gitaltCacheFilename = conf.supybot.directories.data.dirize('ALTLinux.gitalt.cache')
+    _gitaltCacheTimestamp = None
+    _gitaltCache = None
+
     def gitalt(self, irc, msg, args, pattern):
-        packages = self._getPkgList()
+        packages = self._getGitaltList()
+        if packages is None:
+            return
         found = []
         if pattern in packages:
             found.extend([(pattern, p, t) for p, t in
@@ -240,24 +251,40 @@ class ALTLinux(callbacks.Privmsg):
         irc.reply('; '.join(reply) if reply else 'Nothing found')
     gitalt = wrap(gitalt, ['somethingWithoutSpaces'])
 
-    _pkgList = None
-    def _getPkgList(self):
-        if self._pkgList:
-            return self._pkgList
+    def _getGitaltList(self):
+        if self._gitaltCacheTimestamp is None or (time.time() - self._gitaltCacheTimestamp >
+                self.registryValue('gitaltListRefreshPeriod')):
+            self._updateGitaltCache()
+        return self._gitaltCache
+
+    def _updateGitaltCache(self):
+        if os.path.exists(self._gitaltCacheFilename):
+            lastUpdated = os.stat(self._gitaltCacheFilename)[stat.ST_MTIME]
+            if time.time() - lastUpdated < self.registryValue('gitaltListRefreshPeriod'):
+                if self._gitaltCacheTimestamp is None:
+                    fd = open(self._gitaltCacheFilename, 'rb')
+                    self._gitaltCache = pickle.load(fd)
+                    self._gitaltCacheTimestamp = lastUpdated # time.time()
+                    fd.close()
+                return
         try:
-            pkgList = utils.web.getUrlFd('http://git.altlinux.org/people-packages-list')
+            gitaltList = utils.web.getUrlFd('http://git.altlinux.org/people-packages-list')
         except utils.web.Error, err:
             irc.error(err.message)
             return
         r = re.compile(r'^/people/(?P<packager>[a-z0-9_]+)/packages/(?P<package>.*?)\.git\t(?P<time>\d+)$')
         packages = {}
-        for line in pkgList:
+        for line in gitaltList:
             match = r.match(line)
             packages.setdefault(match.group('package'), {})[
                     match.group('packager')] = int(match.group('time'))
-        pkgList.close()
-        self._pkgList = packages
-        return packages
+        gitaltList.close()
+        self._gitaltCache = packages
+        self._gitaltCacheTimestamp = time.time()
+
+        fd = utils.file.AtomicFile(self._gitaltCacheFilename, 'wb')
+        pickle.dump(packages, fd, -1)
+        fd.close()
 
     def _encode(self, s):
         return s.encode(self.registryValue('channelEncoding'))

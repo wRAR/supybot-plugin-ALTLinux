@@ -58,6 +58,9 @@ conf.registerGlobalValue(ALTLinux, 'defaultChannels',
 conf.registerGlobalValue(ALTLinux, 'channelEncoding',
     registry.String('koi8-r', """Determines the encoding used to encode and
     decode channel messages"""))
+conf.registerGlobalValue(ALTLinux, 'gitaltListRefreshPeriod',
+    registry.PositiveInteger(14400, """Determines how often the bot will
+    download git.alt repository list."""))
 
 
 # vim:set shiftwidth=4 tabstop=8 expandtab textwidth=78
