@@ -58,9 +58,9 @@ class ALTLinux(callbacks.Plugin):
     threaded = True
     lastCheck = 0
     def _checkServer(self):
-        user = self.registryValue('user')
-        server = self.registryValue('server')
-        password = self.registryValue('password')
+        user = self.registryValue('gitaltMailUser')
+        server = self.registryValue('gitaltMailServer')
+        password = self.registryValue('gitaltMailPassword')
         if not server:
             raise callbacks.Error, 'There is no configured POP3 server.'
         if not user:
@@ -92,7 +92,7 @@ class ALTLinux(callbacks.Plugin):
 
     def __call__(self, irc, msg):
         now = time.time()
-        if now - self.lastCheck > self.registryValue('period'):
+        if now - self.lastCheck > self.registryValue('gitaltMailPeriod'):
             try:
                 try:
                     t = world.SupyThread(target=self._checkForAnnouncements,
@@ -128,7 +128,7 @@ class ALTLinux(callbacks.Plugin):
                 continue
             gitdir = giturl[:giturl.find(';')]
             refname = message.get('X-git-refname')
-            channels = list(self.registryValue('defaultChannels'))
+            channels = list(self.registryValue('gitaltMailChannels'))
             self.log.info('Making announcement to %L.', channels)
             for channel in channels:
                 if channel in irc.state.channels:
