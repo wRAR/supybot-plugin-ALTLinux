@@ -32,7 +32,6 @@ import email.parser
 import poplib
 import urllib
 import csv
-import xmlrpclib
 from xml.etree.cElementTree import ElementTree
 import re
 from fnmatch import fnmatch
@@ -182,31 +181,6 @@ class ALTLinux(callbacks.Plugin):
                 'summary: "%(summary)s"' % buginfo)
         bugXML.close()
     altbug = wrap(altbug, [('id', 'bug')])
-
-    def altbugxmlrpc(self, irc, msg, args, bugno):
-        bz = xmlrpclib.ServerProxy(self.bugzillaRoot + 'xmlrpc.cgi',
-                use_datetime = True)
-        try:
-            bug = bz.Bug.get_bugs({'ids': [bugno]})['bugs'][0]
-        except xmlrpclib.Fault, fault:
-            irc.error(fault.faultString)
-            return
-        buginfo = {
-                'bug_id':               bug['id'],
-                'summary':              self._encode(bug['summary']),
-                'creation_time':        bug['creation_time'].date(),
-                'last_change_time':     bug['last_change_time'].date(),
-                'bug_severity':         bug['internals']['bug_severity'],
-                'bug_status':           bug['internals']['bug_status'],
-                'resolution':           bug['internals']['resolution'],
-                }
-        products = bz.Product.get_products({'ids': [bug['internals']['product_id']]})['products']
-        buginfo['product'] = self._encode(products[0]['name']) if len(products) else ''
-
-        irc.reply('%(bug_id)d: %(bug_severity)s %(bug_status)s %(resolution)s, '
-                '%(product)s, created: %(creation_time)s, last changed: '
-                '%(last_change_time)s; summary: "%(summary)s"' % buginfo)
-    altbugxmlrpc = wrap(altbug, [('id', 'bug')])
 
     def searchbug(self, irc, msg, args, terms):
         """<search terms>
