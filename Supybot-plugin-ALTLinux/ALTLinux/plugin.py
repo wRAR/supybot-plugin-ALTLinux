@@ -53,8 +53,7 @@ import supybot.callbacks as callbacks
 from supybot.utils.iter import all
 
 class ALTLinux(callbacks.Plugin):
-    """Add the help for "@help ALTLinux" here
-    This should describe *how* to use this plugin."""
+    """The plugin for ALT Linux channels."""
     threaded = True
     lastCheck = 0
     def _checkServer(self):
@@ -142,6 +141,10 @@ class ALTLinux(callbacks.Plugin):
     bugzillaRoot = 'https://bugzilla.altlinux.org/'
 
     def altbug(self, irc, msg, args, bugno):
+        """<bug number>
+
+        Shows information about specified bug from ALT Linux bugzilla.
+        """
         def _formatEmail(e):
             if e.get('name'):
                 return '%s <%s>' % (self._encode(e.get('name')), e.text)
@@ -206,6 +209,10 @@ class ALTLinux(callbacks.Plugin):
     altbugxmlrpc = wrap(altbug, [('id', 'bug')])
 
     def searchbug(self, irc, msg, args, terms):
+        """<search terms>
+
+        Searches ALT Linux bugzilla for specified terms and shows bugs found.
+        """
         try:
             bugsCSV = utils.web.getUrlFd(self.bugzillaRoot +
                     'buglist.cgi?query_format=specific&order=relevance+desc&bug_status=__all__&ctype=csv&content=' +
@@ -231,6 +238,11 @@ class ALTLinux(callbacks.Plugin):
     _gitaltCache = None
 
     def gitalt(self, irc, msg, args, pattern):
+        """<name or search pattern>
+
+        Shows git.altlinux.org repositories for package specified. Package
+        name can contain fnmatch-style wildcards.
+        """
         packages = self._getGitaltList()
         if packages is None:
             return
@@ -252,12 +264,16 @@ class ALTLinux(callbacks.Plugin):
     gitalt = wrap(gitalt, ['somethingWithoutSpaces'])
 
     def _getGitaltList(self):
+        """Returns parsed git.alt packages list.
+        """
         if self._gitaltCacheTimestamp is None or (time.time() - self._gitaltCacheTimestamp >
                 self.registryValue('gitaltListRefreshPeriod')):
             self._updateGitaltCache()
         return self._gitaltCache
 
     def _updateGitaltCache(self):
+        """Updates git.alt packages list caches, if needed.
+        """
         if os.path.exists(self._gitaltCacheFilename):
             lastUpdated = os.stat(self._gitaltCacheFilename)[stat.ST_MTIME]
             if time.time() - lastUpdated < self.registryValue('gitaltListRefreshPeriod'):
