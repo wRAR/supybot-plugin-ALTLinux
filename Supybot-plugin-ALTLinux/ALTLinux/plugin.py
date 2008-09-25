@@ -198,7 +198,7 @@ class ALTLinux(callbacks.Plugin):
         reader = csv.DictReader(bugsCSV)
         reply = []
         for record in reader:
-            record = dict([(k, v.encode('utf-8')) for k, v in
+            record = dict([(k, v.decode('utf-8')) for k, v in
                 record.iteritems()])
             reply.append('%(bug_id)s %(bug_status)s %(resolution)s "%(short_desc)s"' %
                     record)
