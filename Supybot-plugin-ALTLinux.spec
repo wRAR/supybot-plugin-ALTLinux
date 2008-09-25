@@ -1,5 +1,5 @@
 Name: Supybot-plugin-ALTLinux
-Version: 0.2
+Version: 0.3
 Release: alt1
 
 Summary: IRC bot written in Python - ALTLinux plugin
@@ -36,6 +36,9 @@ unset RPM_PYTHON
 %files -f INSTALLED_FILES
 
 %changelog
+* Fri Sep 26 2008 Andrey Rahmatullin <wrar@altlinux.ru> 0.3-alt1
+- add git.alt repository list search
+
 * Sun Sep 14 2008 Andrey Rahmatullin <wrar@altlinux.ru> 0.2-alt1
 - add interaction with ALT Linux Bugzilla (search and bug info)
 
