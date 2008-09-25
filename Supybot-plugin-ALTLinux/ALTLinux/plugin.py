@@ -157,7 +157,7 @@ class ALTLinux(callbacks.Plugin):
         except utils.web.Error, err:
             irc.error(err.message)
             return
-        etree = ElementTree(file = bugXML)
+        etree = ElementTree(file=bugXML)
         bugRoot = etree.find('bug')
         buginfo = {
                 'bug_id':               bugRoot.find('bug_id').text,
@@ -189,7 +189,8 @@ class ALTLinux(callbacks.Plugin):
         """
         try:
             bugsCSV = utils.web.getUrlFd(self.bugzillaRoot +
-                    'buglist.cgi?query_format=specific&order=relevance+desc&bug_status=__all__&ctype=csv&content=' +
+                    'buglist.cgi?query_format=specific&order=relevance+desc&'
+                    'bug_status=__all__&ctype=csv&content=' +
                     urllib.quote_plus(self._decode(terms).encode('utf-8')))
         except utils.web.Error, err:
             irc.error(err.message)
@@ -207,7 +208,8 @@ class ALTLinux(callbacks.Plugin):
     searchbug = wrap(searchbug, ['text'])
 
 # git.altlinux.org
-    _gitaltCacheFilename = conf.supybot.directories.data.dirize('ALTLinux.gitalt.cache')
+    _gitaltCacheFilename = conf.supybot.directories.data.dirize(
+            'ALTLinux.gitalt.cache')
     _gitaltCacheTimestamp = None
     _gitaltCache = None
 
@@ -254,15 +256,17 @@ class ALTLinux(callbacks.Plugin):
                 if self._gitaltCacheTimestamp is None:
                     fd = open(self._gitaltCacheFilename, 'rb')
                     self._gitaltCache = pickle.load(fd)
-                    self._gitaltCacheTimestamp = lastUpdated # time.time()
+                    self._gitaltCacheTimestamp = lastUpdated
                     fd.close()
                 return
         try:
-            gitaltList = utils.web.getUrlFd('http://git.altlinux.org/people-packages-list')
+            gitaltList = utils.web.getUrlFd(
+                    'http://git.altlinux.org/people-packages-list')
         except utils.web.Error, err:
             irc.error(err.message)
             return
-        r = re.compile(r'^/people/(?P<packager>[a-z0-9_]+)/packages/(?P<package>.*?)\.git\t(?P<time>\d+)$')
+        r = re.compile(
+                r'^/people/(?P<packager>[a-z0-9_]+)/packages/(?P<package>.*?)\.git\t(?P<time>\d+)$')
         packages = {}
         for line in gitaltList:
             match = r.match(line)
