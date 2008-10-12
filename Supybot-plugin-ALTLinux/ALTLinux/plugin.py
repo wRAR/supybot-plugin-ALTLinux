@@ -215,7 +215,7 @@ class ALTLinux(callbacks.Plugin):
         Shows git.altlinux.org repositories for package specified. Package
         name can contain fnmatch-style wildcards.
         """
-        packages = self._getGitaltList()
+        packages = self._getGitaltList(irc)
         if packages is None:
             return
         found = []
@@ -235,15 +235,15 @@ class ALTLinux(callbacks.Plugin):
         irc.reply('; '.join(reply) if reply else 'Nothing found')
     gitalt = wrap(gitalt, ['somethingWithoutSpaces'])
 
-    def _getGitaltList(self):
+    def _getGitaltList(self, irc):
         """Returns parsed git.alt packages list.
         """
         if self._gitaltCacheTimestamp is None or (time.time() - self._gitaltCacheTimestamp >
                 self.registryValue('gitaltListRefreshPeriod')):
-            self._updateGitaltCache()
+            self._updateGitaltCache(irc)
         return self._gitaltCache
 
-    def _updateGitaltCache(self):
+    def _updateGitaltCache(self, irc):
         """Updates git.alt packages list caches, if needed.
         """
         if os.path.exists(self._gitaltCacheFilename):
