@@ -43,13 +43,9 @@ import stat
 import supybot.conf as conf
 import supybot.utils as utils
 import supybot.world as world
-from supybot.commands import *
-import supybot.plugins as plugins
+from supybot.commands import wrap
 import supybot.ircmsgs as ircmsgs
-import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
-
-from supybot.utils.iter import all
 
 class ALTLinux(callbacks.Plugin):
     """The plugin for ALT Linux channels."""
