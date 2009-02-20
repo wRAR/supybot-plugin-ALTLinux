@@ -1,15 +1,20 @@
-Name: Supybot-plugin-ALTLinux
+Name: python-module-supybot-plugins-ALTLinux
 Version: 0.3
-Release: alt1
+Release: alt2
 
 Summary: IRC bot written in Python - ALTLinux plugin
 License: BSD
 Group: Networking/IRC
 Url: http://altlinux.ru/
 
+BuildArch: noarch
+
 Packager: Andrey Rahmatullin <wrar@altlinux.ru>
 
-Source0: %name-%version.tar.bz2
+Source0: %name-%version.tar
+
+Provides: Supybot-plugin-ALTLinux = %version-%release
+Obsoletes: Supybot-plugin-ALTLinux
 
 BuildPreReq: python-dev
 
@@ -19,23 +24,28 @@ It features many plugins, is easy to extend and to use.
 
 This package contains a plugin for ALT Linux channels.
 
+
 %prep
 %setup
 
 %build
-mkdir -p buildroot
-CFLAGS="%optflags" %__python setup.py \
-    install --optimize=2 \
-    --root=`pwd`/buildroot \
-    --record=INSTALLED_FILES
+%python_build
 
 %install
-cp -pr buildroot %buildroot
-unset RPM_PYTHON
+%python_install
 
-%files -f INSTALLED_FILES
+%files
+%python_sitelibdir/supybot/plugins/ALTLinux/
+%python_sitelibdir/*.egg-info
+
 
 %changelog
+* Sat Feb 21 2009 Andrey Rahmatullin <wrar@altlinux.ru> 0.3-alt2
+- rename to python-module-supybot-plugins-ALTLinux
+- package as noarch
+- use %%python_{build,install}
+- package directories along with files
+
 * Fri Sep 26 2008 Andrey Rahmatullin <wrar@altlinux.ru> 0.3-alt1
 - add git.alt repository list search
 
