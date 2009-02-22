@@ -33,24 +33,17 @@ import supybot.registry as registry
 def configure(advanced):
     conf.registerPlugin('ALTLinux', True)
 
-
 ALTLinux = conf.registerPlugin('ALTLinux')
 conf.registerGlobalValue(ALTLinux, 'channelEncoding',
     registry.String('koi8-r', """Determines the encoding used to encode and
     decode channel messages"""))
 # git.alt mail announcements
-conf.registerGlobalValue(ALTLinux, 'gitaltMailServer',
-    registry.String('', """Determines what POP3 server to connect to in order
-    to check for email."""))
-conf.registerGlobalValue(ALTLinux, 'gitaltMailUser',
-    registry.String('', """Determines what username to give to the POP3 server
-    when connecting."""))
-conf.registerGlobalValue(ALTLinux, 'gitaltMailPassword',
-    registry.String('', """Determines what password to give to the POP3 server
-    when connecting.""", private=True))
+conf.registerGlobalValue(ALTLinux, 'gitaltMboxPath',
+    registry.String('', """Determines the path to the mailbox with git.alt
+    messages.""", private=True))
 conf.registerGlobalValue(ALTLinux, 'gitaltMailPeriod',
     registry.PositiveInteger(60, """Determines how often the bot will check
-    the POP3 server for new messages to announce."""))
+    the mailbox for new messages to announce."""))
 conf.registerGlobalValue(ALTLinux, 'gitaltMailChannels',
     conf.SpaceSeparatedSetOfChannels([], """Determines to which channels the
     bot will send messages"""))

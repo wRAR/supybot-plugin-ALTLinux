@@ -28,8 +28,6 @@
 ###
 
 import time
-import email.parser
-import poplib
 import urllib
 import csv
 from xml.etree.cElementTree import ElementTree
@@ -39,6 +37,7 @@ from operator import itemgetter
 import cPickle as pickle
 import os
 import stat
+import mailbox
 
 import supybot.conf as conf
 import supybot.utils as utils
@@ -51,38 +50,22 @@ class ALTLinux(callbacks.Plugin):
     """The plugin for ALT Linux channels."""
     threaded = True
     lastCheck = 0
-    def _checkServer(self):
-        user = self.registryValue('gitaltMailUser')
-        server = self.registryValue('gitaltMailServer')
-        password = self.registryValue('gitaltMailPassword')
-        if not server:
-            raise callbacks.Error, 'There is no configured POP3 server.'
-        if not user:
-            raise callbacks.Error, 'There is no configured POP3 user.'
-        if not password:
-            raise callbacks.Error, 'There is no configured POP3 password.'
-        return (server, user, password)
 
-    def _connect(self, server, user, password):
-        pop = poplib.POP3(server)
-        pop.user(user)
-        pop.pass_(password)
-        return pop
+    def _checkMbox(self, path):
+        return path is not None and os.path.isfile(path)
 
-    def _getPop(self):
-        return self._connect(*self._checkServer())
+    def _getMbox(self, path):
+        mbox = mailbox.mbox(path, create=False)
+        mbox.lock()
+        return mbox
 
-    def _getMsgs(self, pop):
-        n = len(pop.list()[1])
-        for i in range(1, n + 1):
-            (_, lines, _) = pop.retr(i)
-            yield (i, '\r\n'.join(lines))
+    def _getMsgs(self, mbox):
+        while len(mbox):
+            (_, message) = mbox.popitem()
+            yield message
 
-    def _quit(self, pop):
-        n = len(pop.list()[1])
-        for i in range(1, n + 1):
-            pop.dele(i)
-        pop.quit()
+    def _closeMbox(self, mbox):
+        mbox.close()
 
     def __call__(self, irc, msg):
         now = time.time()
@@ -103,19 +86,20 @@ class ALTLinux(callbacks.Plugin):
                 self.log.exception('Uncaught exception checking for new mail:')
 
     def _checkForAnnouncements(self, irc):
+        path = self.registryValue('gitaltMboxPath')
+        if not self._checkMbox(path):
+            return
         start = time.time()
         self.log.info('Checking mailbox for announcements.')
-        pop = self._getPop()
-        i = None
-        for (i, msg) in self._getMsgs(pop):
-            message = email.parser.HeaderParser().parsestr(msg)
+        mbox = self._getMbox(path)
+        for message in self._getMsgs(mbox):
             if not message:
                 continue
             subject = message.get('Subject', '')
             self.log.info('Received message with subject %q.',
                           subject)
             descr = message.get('X-git-description')
-            if not descr.startswith('packages'):
+            if not descr or not descr.startswith('packages'):
                 continue
             giturl = message.get('X-git-URL')
             if not giturl:
@@ -128,7 +112,7 @@ class ALTLinux(callbacks.Plugin):
                 if channel in irc.state.channels:
                     s = 'Update of %s (%s)' % (gitdir, refname)
                     irc.queueMsg(ircmsgs.privmsg(channel, s))
-        self._quit(pop)
+        self._closeMbox(mbox)
         self.log.info('Finished checking mailbox, time elapsed: %s',
                       utils.timeElapsed(time.time() - start))
 
