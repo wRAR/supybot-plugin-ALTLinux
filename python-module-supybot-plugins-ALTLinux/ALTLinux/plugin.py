@@ -77,7 +77,7 @@ class ALTLinux(callbacks.Plugin):
         for i in range(1, n + 1):
             (_, lines, _) = pop.retr(i)
             yield (i, '\r\n'.join(lines))
-        
+
     def _quit(self, pop):
         n = len(pop.list()[1])
         for i in range(1, n + 1):
