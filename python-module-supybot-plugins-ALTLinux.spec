@@ -1,6 +1,6 @@
 Name: python-module-supybot-plugins-ALTLinux
-Version: 0.3
-Release: alt2
+Version: 0.3.1
+Release: alt1
 
 Summary: IRC bot written in Python - ALTLinux plugin
 License: BSD
@@ -40,6 +40,9 @@ This package contains a plugin for ALT Linux channels.
 
 
 %changelog
+* Wed Apr 29 2009 Andrey Rahmatullin <wrar@altlinux.ru> 0.3.1-alt1
+- rewrite git.alt mail handler to fetch from a local mbox
+
 * Sat Feb 21 2009 Andrey Rahmatullin <wrar@altlinux.ru> 0.3-alt2
 - rename to python-module-supybot-plugins-ALTLinux
 - package as noarch
