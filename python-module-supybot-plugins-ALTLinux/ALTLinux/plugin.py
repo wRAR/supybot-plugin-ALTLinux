@@ -27,17 +27,17 @@
 # POSSIBILITY OF SUCH DAMAGE.
 ###
 
+import cPickle as pickle
+import csv
+from fnmatch import fnmatch
+import mailbox
+from operator import itemgetter
+import os
+import re
+import stat
 import time
 import urllib
-import csv
 from xml.etree.cElementTree import ElementTree
-import re
-from fnmatch import fnmatch
-from operator import itemgetter
-import cPickle as pickle
-import os
-import stat
-import mailbox
 
 import supybot.conf as conf
 import supybot.utils as utils
