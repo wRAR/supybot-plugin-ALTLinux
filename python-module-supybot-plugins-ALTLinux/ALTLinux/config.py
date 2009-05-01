@@ -41,9 +41,6 @@ conf.registerGlobalValue(ALTLinux, 'channelEncoding',
 conf.registerGlobalValue(ALTLinux, 'gitaltMboxPath',
     registry.String('', """Determines the path to the mailbox with git.alt
     messages.""", private=True))
-conf.registerGlobalValue(ALTLinux, 'gitaltMailPeriod',
-    registry.PositiveInteger(60, """Determines how often the bot will check
-    the mailbox for new messages to announce."""))
 conf.registerGlobalValue(ALTLinux, 'gitaltMailChannels',
     conf.SpaceSeparatedSetOfChannels([], """Determines to which channels the
     bot will send messages"""))
