@@ -33,6 +33,7 @@ from fnmatch import fnmatch
 import mailbox
 from operator import itemgetter
 import os
+import pyinotify
 import re
 import stat
 import time
@@ -48,15 +49,41 @@ import supybot.callbacks as callbacks
 
 class ALTLinux(callbacks.Plugin):
     """The plugin for ALT Linux channels."""
-    threaded = True
-    lastCheck = 0
 
-    def _checkMbox(self, path):
+    def __init__(self, irc):
+        self.__parent = super(ALTLinux, self)
+        self.__parent.__init__(irc)
+        self.irc = irc
+        self.mboxIsOpen = False
+        self.watchManager = pyinotify.WatchManager()
+        self.notifier = pyinotify.Notifier(self.watchManager)
+        self.notifyThread = None
+        self._addMboxWatch()
+
+    def die(self):
+        self.__parent.die()
+        self.notifier.stop()
+
+    def _startWatching(self):
+        if not self.notifyThread is None:
+            return
+        self.notifyThread = world.SupyThread(target=self.notifier.loop)
+        self.notifyThread.setDaemon(True)
+        self.notifyThread.start()
+
+    def _validateMboxPath(self, path):
         return path is not None and os.path.isfile(path)
 
     def _getMbox(self, path):
+        if os.stat(path)[stat.ST_SIZE] == 0:
+            return None
         mbox = mailbox.mbox(path, create=False)
-        mbox.lock()
+        try:
+            mbox.lock()
+        except mailbox.ExternalClashError:
+            mbox.close()
+            return None
+        self.mboxIsOpen = True
         return mbox
 
     def _getMsgs(self, mbox):
@@ -66,32 +93,24 @@ class ALTLinux(callbacks.Plugin):
 
     def _closeMbox(self, mbox):
         mbox.close()
+        self.mboxIsOpen = False
 
-    def __call__(self, irc, msg):
-        now = time.time()
-        if now - self.lastCheck > self.registryValue('gitaltMailPeriod'):
-            try:
-                try:
-                    t = world.SupyThread(target=self._checkForAnnouncements,
-                                         args=(irc,))
-                    t.setDaemon(True)
-                    t.start()
-                finally:
-                    # If there's an error, we don't want to be checking every
-                    # message.
-                    self.lastCheck = now
-            except callbacks.Error, e:
-                self.log.warning('Couldn\'t check mail: %s', e)
-            except Exception:
-                self.log.exception('Uncaught exception checking for new mail:')
-
-    def _checkForAnnouncements(self, irc):
-        path = self.registryValue('gitaltMboxPath')
-        if not self._checkMbox(path):
+    def _handleMboxEvent(self, event):
+        if event.mask == pyinotify.IN_DELETE_SELF:
+            while not self._addMboxWatch():
+                pass
+        if event.mask != pyinotify.IN_CLOSE_WRITE:
             return
+        if self.mboxIsOpen:
+            return
+        self._checkMbox(event.path)
+
+    def _checkMbox(self, path):
         start = time.time()
-        self.log.info('Checking mailbox for announcements.')
         mbox = self._getMbox(path)
+        if mbox is None:
+            return
+        self.log.info('Checking mailbox for announcements.')
         for message in self._getMsgs(mbox):
             if not message:
                 continue
@@ -109,12 +128,23 @@ class ALTLinux(callbacks.Plugin):
             channels = list(self.registryValue('gitaltMailChannels'))
             self.log.info('Making announcement to %L.', channels)
             for channel in channels:
-                if channel in irc.state.channels:
+                if channel in self.irc.state.channels:
                     s = 'Update of %s (%s)' % (gitdir, refname)
-                    irc.queueMsg(ircmsgs.privmsg(channel, s))
+                    self.irc.queueMsg(ircmsgs.privmsg(channel, s))
         self._closeMbox(mbox)
         self.log.info('Finished checking mailbox, time elapsed: %s',
                       utils.timeElapsed(time.time() - start))
+
+    def _addMboxWatch(self):
+        path = self.registryValue('gitaltMboxPath')
+        if not self._validateMboxPath(path):
+            return False
+        self.watchManager.add_watch(path,
+                                    pyinotify.IN_CLOSE_WRITE | pyinotify.IN_DELETE_SELF,
+                                    self._handleMboxEvent)
+        self._startWatching()
+        self._checkMbox(path)
+        return True
 
 # Bugzilla
     bugzillaRoot = 'https://bugzilla.altlinux.org/'
