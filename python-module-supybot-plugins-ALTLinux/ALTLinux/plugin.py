@@ -76,7 +76,7 @@ class ALTLinux(callbacks.Plugin):
     def _validateMboxPath(self, path):
         return path is not None and os.path.isfile(path)
 
-    def _getMbox(self, path):
+    def _openMbox(self, path):
         """Opens and returns the mailbox.
         """
         if os.stat(path)[stat.ST_SIZE] == 0:
@@ -115,11 +115,9 @@ class ALTLinux(callbacks.Plugin):
     def _checkMbox(self, path):
         """Checks the mailbox for messages and makes announces.
         """
-        start = time.time()
-        mbox = self._getMbox(path)
+        mbox = self._openMbox(path)
         if mbox is None:
             return
-        self.log.info('Checking mailbox for announcements.')
         for message in self._getMsgs(mbox):
             if not message:
                 continue
@@ -134,15 +132,11 @@ class ALTLinux(callbacks.Plugin):
                 continue
             gitdir = giturl[:giturl.find(';')]
             refname = message.get('X-git-refname')
-            channels = list(self.registryValue('gitaltMailChannels'))
-            self.log.info('Making announcement to %L.', channels)
-            for channel in channels:
+            for channel in list(self.registryValue('gitaltMailChannels')):
                 if channel in self.irc.state.channels:
                     s = 'Update of %s (%s)' % (gitdir, refname)
                     self.irc.queueMsg(ircmsgs.privmsg(channel, s))
         self._closeMbox(mbox)
-        self.log.info('Finished checking mailbox, time elapsed: %s',
-                      utils.timeElapsed(time.time() - start))
 
     def _addMboxWatch(self):
         """Adds an inotify watch for the mailbox, then checks it for the messages.
