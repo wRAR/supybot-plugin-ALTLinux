@@ -229,7 +229,7 @@ class ALTLinux(callbacks.Plugin):
         Shows git.altlinux.org repositories for package specified. Package
         name can contain fnmatch-style wildcards.
         """
-        packages = self._getGitaltList(irc)
+        packages = self._getGitaltList()
         if packages is None:
             return
         found = []
@@ -249,15 +249,15 @@ class ALTLinux(callbacks.Plugin):
         irc.reply('; '.join(reply) if reply else 'Nothing found')
     gitalt = wrap(gitalt, ['somethingWithoutSpaces'])
 
-    def _getGitaltList(self, irc):
+    def _getGitaltList(self):
         """Returns parsed git.alt packages list.
         """
         if self._gitaltCacheTimestamp is None or (time.time() - self._gitaltCacheTimestamp >
                 self.registryValue('gitaltListRefreshPeriod')):
-            self._updateGitaltCache(irc)
+            self._updateGitaltCache()
         return self._gitaltCache
 
-    def _updateGitaltCache(self, irc):
+    def _updateGitaltCache(self):
         """Updates git.alt packages list caches, if needed.
         """
         if os.path.exists(self._gitaltCacheFilename):
@@ -273,7 +273,7 @@ class ALTLinux(callbacks.Plugin):
             gitaltList = utils.web.getUrlFd(
                     'http://git.altlinux.org/people-packages-list')
         except utils.web.Error, err:
-            irc.error(err.message)
+            self.irc.error(err.message)
             return
         r = re.compile(
                 r'^/people/(?P<packager>[a-z0-9_]+)/packages/(?P<package>.*?)\.git\t(?P<time>\d+)$')
