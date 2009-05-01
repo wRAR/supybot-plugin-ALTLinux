@@ -65,6 +65,8 @@ class ALTLinux(callbacks.Plugin):
         self.notifier.stop()
 
     def _startWatching(self):
+        """Runs the inotify thread, if it doesn't exist.
+        """
         if not self.notifyThread is None:
             return
         self.notifyThread = world.SupyThread(target=self.notifier.loop)
@@ -75,6 +77,8 @@ class ALTLinux(callbacks.Plugin):
         return path is not None and os.path.isfile(path)
 
     def _getMbox(self, path):
+        """Opens and returns the mailbox.
+        """
         if os.stat(path)[stat.ST_SIZE] == 0:
             return None
         mbox = mailbox.mbox(path, create=False)
@@ -96,7 +100,10 @@ class ALTLinux(callbacks.Plugin):
         self.mboxIsOpen = False
 
     def _handleMboxEvent(self, event):
+        """Handles inotify events for the mailbox.
+        """
         if event.mask == pyinotify.IN_DELETE_SELF:
+            # mbox.flush() recreates the file
             while not self._addMboxWatch():
                 pass
         if event.mask != pyinotify.IN_CLOSE_WRITE:
@@ -106,6 +113,8 @@ class ALTLinux(callbacks.Plugin):
         self._checkMbox(event.path)
 
     def _checkMbox(self, path):
+        """Checks the mailbox for messages and makes announces.
+        """
         start = time.time()
         mbox = self._getMbox(path)
         if mbox is None:
@@ -136,6 +145,8 @@ class ALTLinux(callbacks.Plugin):
                       utils.timeElapsed(time.time() - start))
 
     def _addMboxWatch(self):
+        """Adds an inotify watch for the mailbox, then checks it for the messages.
+        """
         path = self.registryValue('gitaltMboxPath')
         if not self._validateMboxPath(path):
             return False
