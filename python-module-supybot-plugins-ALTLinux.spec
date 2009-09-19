@@ -1,5 +1,5 @@
 Name: python-module-supybot-plugins-ALTLinux
-Version: 0.3.1
+Version: 0.3.2
 Release: alt1
 
 Summary: IRC bot written in Python - ALTLinux plugin
@@ -16,7 +16,7 @@ Source0: %name-%version.tar
 Provides: Supybot-plugin-ALTLinux = %version-%release
 Obsoletes: Supybot-plugin-ALTLinux
 
-BuildPreReq: python-dev
+BuildPreReq: python-devel
 
 %description
 Supybot is a flexible IRC bot written in python.
@@ -40,6 +40,9 @@ This package contains a plugin for ALT Linux channels.
 
 
 %changelog
+* Sat Sep 19 2009 Andrey Rahmatullin <wrar@altlinux.ru> 0.3.2-alt1
+- use inotify(7) instead of polling in the git.alt mail handler
+
 * Wed Apr 29 2009 Andrey Rahmatullin <wrar@altlinux.ru> 0.3.1-alt1
 - rewrite git.alt mail handler to fetch from a local mbox
 
