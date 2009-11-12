@@ -1,6 +1,6 @@
 Name: python-module-supybot-plugins-ALTLinux
 Version: 0.3.2
-Release: alt1
+Release: alt1.1
 
 Summary: IRC bot written in Python - ALTLinux plugin
 License: BSD
@@ -40,6 +40,9 @@ This package contains a plugin for ALT Linux channels.
 
 
 %changelog
+* Thu Nov 12 2009 Eugeny A. Rostovtsev (REAL) <real at altlinux.org> 0.3.2-alt1.1
+- Rebuilt with python 2.6
+
 * Sat Sep 19 2009 Andrey Rahmatullin <wrar@altlinux.ru> 0.3.2-alt1
 - use inotify(7) instead of polling in the git.alt mail handler
 
