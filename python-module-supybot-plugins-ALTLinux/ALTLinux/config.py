@@ -48,6 +48,9 @@ conf.registerGlobalValue(ALTLinux, 'gitaltMailChannels',
 conf.registerGlobalValue(ALTLinux, 'gitaltListRefreshPeriod',
     registry.PositiveInteger(14400, """Determines how often the bot will
     download git.alt repository list."""))
+conf.registerChannelValue(ALTLinux, 'bugnoSnarfer',
+    registry.Boolean(False, """Determines whether the bot will output the bug info
+    when it sees #NNNN-style bug number in the channel."""))
 
 
 # vim:set shiftwidth=4 tabstop=8 expandtab textwidth=78

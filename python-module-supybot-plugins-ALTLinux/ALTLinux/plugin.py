@@ -47,8 +47,10 @@ from supybot.commands import wrap
 import supybot.ircmsgs as ircmsgs
 import supybot.callbacks as callbacks
 
-class ALTLinux(callbacks.Plugin):
+class ALTLinux(callbacks.PluginRegexp):
     """The plugin for ALT Linux channels."""
+
+    unaddressedRegexps = ['bugnoSnarfer']
 
     def __init__(self, irc):
         self.__parent = super(ALTLinux, self)
@@ -159,6 +161,12 @@ class ALTLinux(callbacks.Plugin):
 
         Shows information about specified bug from ALT Linux bugzilla.
         """
+        s = self._formatBugInfo(irc, bugno)
+        if (s):
+            irc.reply(s)
+    altbug = wrap(altbug, [('id', 'bug')])
+
+    def _formatBugInfo(self, irc, bugno):
         def _formatEmail(e):
             if e.get('name'):
                 return '%s <%s>' % (self._encode(e.get('name')), e.text)
@@ -189,13 +197,13 @@ class ALTLinux(callbacks.Plugin):
                 'reporter':             _formatEmail(bugRoot.find('reporter')),
                 'assigned_to':          _formatEmail(bugRoot.find('assigned_to')),
                 }
-        irc.reply('%(bug_id)s: %(bug_severity)s, %(bug_status)s'
+        bugXML.close()
+        return ('%(bug_id)s: %(bug_severity)s, %(bug_status)s'
                 '%(resolution)s; %(product)s - %(component)s; created on '
                 '%(creation_time)s by %(reporter)s, assigned to '
                 '%(assigned_to)s, last changed on %(last_change_time)s; '
                 'summary: "%(summary)s"' % buginfo)
-        bugXML.close()
-    altbug = wrap(altbug, [('id', 'bug')])
+
 
     def searchbug(self, irc, msg, args, terms):
         """<search terms>
@@ -221,6 +229,16 @@ class ALTLinux(callbacks.Plugin):
         if reply:
             irc.reply(self._encode('; '.join(reply)))
     searchbug = wrap(searchbug, ['text'])
+
+    def bugnoSnarfer(self, irc, msg, match):
+        r'(\s|^)#(\d{4,5})\b'
+        channel = msg.args[0]
+        if not irc.isChannel(channel):
+            return
+        if self.registryValue('bugnoSnarfer', channel):
+            s = self._formatBugInfo(irc, match.group(2))
+            if (s):
+                irc.reply(s, prefixNick=False)
 
 # git.altlinux.org
     _gitaltCacheFilename = conf.supybot.directories.data.dirize(
