@@ -102,7 +102,7 @@ class ALTLinux(callbacks.Plugin):
     def _handleMboxEvent(self, event):
         """Handles inotify events for the mailbox.
         """
-        if event.mask == pyinotify.IN_DELETE_SELF:
+        if event.mask == pyinotify.IN_IGNORED:
             # mbox.flush() recreates the file
             while not self._addMboxWatch():
                 pass
@@ -145,7 +145,7 @@ class ALTLinux(callbacks.Plugin):
         if not self._validateMboxPath(path):
             return False
         self.watchManager.add_watch(path,
-                                    pyinotify.IN_CLOSE_WRITE | pyinotify.IN_DELETE_SELF,
+                                    pyinotify.IN_CLOSE_WRITE,
                                     self._handleMboxEvent)
         self._startWatching()
         self._checkMbox(path)
