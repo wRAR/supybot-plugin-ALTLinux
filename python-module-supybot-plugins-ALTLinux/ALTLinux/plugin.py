@@ -164,7 +164,7 @@ class ALTLinux(callbacks.PluginRegexp):
         try:
             buginfo = self._getBugInfo(bugno)
         except utils.web.Error, err:
-            irc.error(err.message)
+            irc.error(err.args[0])
             return
         irc.reply('%(bug_id)s: %(bug_severity)s, %(bug_status)s'
             '%(resolution)s; %(product)s - %(component)s; created on '
@@ -215,7 +215,7 @@ class ALTLinux(callbacks.PluginRegexp):
                     'bug_status=__all__&ctype=csv&content=' +
                     urllib.quote_plus(self._decode(terms).encode('utf-8')))
         except utils.web.Error, err:
-            irc.error(err.message)
+            irc.error(err.args[0])
             return
         reader = csv.DictReader(bugsCSV)
         reply = []
@@ -299,7 +299,7 @@ class ALTLinux(callbacks.PluginRegexp):
             gitaltList = utils.web.getUrlFd(
                     'http://git.altlinux.org/people-packages-list')
         except utils.web.Error, err:
-            self.irc.error(err.message)
+            self.irc.error(err.args[0])
             return
         r = re.compile(
                 r'^/people/(?P<packager>[a-z0-9_]+)/packages/(?P<package>.*?)\.git\t(?P<time>\d+)$')
