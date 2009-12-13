@@ -240,7 +240,8 @@ class ALTLinux(callbacks.PluginRegexp):
             except utils.web.Error:
                 return
             irc.reply('%(url)s - %(product)s - %(bug_status)s%(resolution)s'
-                ' - %(component)s - "%(summary)s"' % buginfo, prefixNick=False)
+                ' - %(component)s - "%(summary)s"' % buginfo, prefixNick=False,
+                private=False, notice=False)
 
 # git.altlinux.org
     _gitaltCacheFilename = conf.supybot.directories.data.dirize(
