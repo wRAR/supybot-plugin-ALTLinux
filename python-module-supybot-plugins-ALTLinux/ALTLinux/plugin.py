@@ -161,25 +161,28 @@ class ALTLinux(callbacks.PluginRegexp):
 
         Shows information about specified bug from ALT Linux bugzilla.
         """
-        s = self._formatBugInfo(irc, bugno)
-        if (s):
-            irc.reply(s)
+        try:
+            buginfo = self._getBugInfo(bugno)
+        except utils.web.Error, err:
+            irc.error(err.message)
+            return
+        irc.reply('%(bug_id)s: %(bug_severity)s, %(bug_status)s'
+            '%(resolution)s; %(product)s - %(component)s; created on '
+            '%(creation_time)s by %(reporter)s, assigned to '
+            '%(assigned_to)s, last changed on %(last_change_time)s; '
+            'summary: "%(summary)s"' % buginfo)
     altbug = wrap(altbug, [('id', 'bug')])
 
-    def _formatBugInfo(self, irc, bugno):
+    def _getBugInfo(self, bugno):
         def _formatEmail(e):
             if e.get('name'):
                 return '%s <%s>' % (self._encode(e.get('name')), e.text)
             return e.text
 
-        try:
-            bugXML = utils.web.getUrlFd(self.bugzillaRoot +
-                    'show_bug.cgi?ctype=xml&excludefield=attachmentdata&'
-                    'excludefield=long_desc&excludefield=attachment&id=' +
-                    str(bugno))
-        except utils.web.Error, err:
-            irc.error(err.message)
-            return
+        bugXML = utils.web.getUrlFd(self.bugzillaRoot +
+                'show_bug.cgi?ctype=xml&excludefield=attachmentdata&'
+                'excludefield=long_desc&excludefield=attachment&id=' +
+                str(bugno))
         etree = ElementTree(file=bugXML)
         bugRoot = etree.find('bug')
         buginfo = {
@@ -196,14 +199,10 @@ class ALTLinux(callbacks.PluginRegexp):
                 'component':            bugRoot.find('component').text,
                 'reporter':             _formatEmail(bugRoot.find('reporter')),
                 'assigned_to':          _formatEmail(bugRoot.find('assigned_to')),
+                'url':                  self.bugzillaRoot + str(bugno),
                 }
         bugXML.close()
-        return ('%(bug_id)s: %(bug_severity)s, %(bug_status)s'
-                '%(resolution)s; %(product)s - %(component)s; created on '
-                '%(creation_time)s by %(reporter)s, assigned to '
-                '%(assigned_to)s, last changed on %(last_change_time)s; '
-                'summary: "%(summary)s"' % buginfo)
-
+        return buginfo
 
     def searchbug(self, irc, msg, args, terms):
         """<search terms>
@@ -236,9 +235,12 @@ class ALTLinux(callbacks.PluginRegexp):
         if not irc.isChannel(channel):
             return
         if self.registryValue('bugnoSnarfer', channel):
-            s = self._formatBugInfo(irc, match.group(2))
-            if (s):
-                irc.reply(s, prefixNick=False)
+            try:
+                buginfo = self._getBugInfo(match.group(2))
+            except utils.web.Error:
+                return
+            irc.reply('%(url)s - %(product)s - %(bug_status)s%(resolution)s'
+                ' - %(component)s - "%(summary)s"' % buginfo, prefixNick=False)
 
 # git.altlinux.org
     _gitaltCacheFilename = conf.supybot.directories.data.dirize(
