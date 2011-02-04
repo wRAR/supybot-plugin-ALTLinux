@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 plugins = [
-	'ALTLinux',
+    'ALTLinux',
     ]
 
 import sys
@@ -26,10 +26,14 @@ package_dir = { }
 for plugin in plugins:
     package_dir['supybot.plugins.' + plugin] = plugin
 
-version = '0.3.1'
+version = '0.3.3'
 setup(
     name='supybot-plugin-altlinux',
     version=version,
+    author='Andrey Rahmatullin',
+    author_email='wrar@wrar.name',
+    url='http://github.com/wRAR/supybot-plugin-ALTLinux',
+    description='Supybot plugin for ALT Linux channels',
     packages=packages,
     package_dir=package_dir,
     )
