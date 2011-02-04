@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2007-2009, Andrey Rahmatullin
+# Copyright (c) 2007-2011, Andrey Rahmatullin
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -317,9 +317,9 @@ class ALTLinux(callbacks.PluginRegexp):
         fd.close()
 
     def _encode(self, s):
-        return s.encode(self.registryValue('channelEncoding'))
+        return s.encode(self.registryValue('channelEncoding'), 'replace')
     def _decode(self, s):
-        return s.decode(self.registryValue('channelEncoding'))
+        return s.decode(self.registryValue('channelEncoding'), 'replace')
 
 Class = ALTLinux
 
